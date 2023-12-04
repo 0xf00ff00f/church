@@ -4,26 +4,26 @@ namespace church
 {
 
 // \f.\x.x
-constexpr auto zero = []([[maybe_unused]] auto f) { return [](auto x) { return x; }; };
+inline constexpr auto zero = []([[maybe_unused]] auto f) { return [](auto x) { return x; }; };
 
 // \n.\f.\x.f (n f x)
-constexpr auto succ = [](auto n) { return [=](auto f) { return [=](auto x) { return f(n(f)(x)); }; }; };
+inline constexpr auto succ = [](auto n) { return [=](auto f) { return [=](auto x) { return f(n(f)(x)); }; }; };
 
 // \m.\n.\f.\x.m f (n f x)
-constexpr auto plus = [](auto m) {
+inline constexpr auto plus = [](auto m) {
     return [=](auto n) { return [=](auto f) { return [=](auto x) { return m(f)(n(f)(x)); }; }; };
 };
 
 // \m.\n.\f.\x.m (n f) x
-constexpr auto mult = [](auto m) {
+inline constexpr auto mult = [](auto m) {
     return [=](auto n) { return [=](auto f) { return [=](auto x) { return m(n(f))(x); }; }; };
 };
 
 // \m.\n.n m
-constexpr auto exp = [](auto m) { return [=](auto n) { return n(m); }; };
+inline constexpr auto exp = [](auto m) { return [=](auto n) { return n(m); }; };
 
 // \n\f\x.n (\g.\h.h (g f)) (\u.x) (\u.u)
-constexpr auto pred = [](auto n) {
+inline constexpr auto pred = [](auto n) {
     return [=](auto f) {
         return [=](auto x) {
             return n([=](auto g) { return [=](auto h) { return h(g(f)); }; })(
@@ -33,24 +33,15 @@ constexpr auto pred = [](auto n) {
 };
 
 // \m.\n.n pred m
-constexpr auto minus = [](auto m) { return [=](auto n) { return n(pred)(m); }; };
+inline constexpr auto minus = [](auto m) { return [=](auto n) { return n(pred)(m); }; };
 
 template<int I>
-struct church
-{
-    static constexpr auto value = succ(church<I - 1>::value);
-};
+inline constexpr auto church = succ(church<I - 1>);
 
 template<>
-struct church<0>
-{
-    static constexpr auto value = zero;
-};
+inline constexpr auto church<0> = zero;
 
-template<int I>
-constexpr auto church_v = church<I>::value;
-
-constexpr int unchurch(auto n)
+inline constexpr int unchurch(auto n)
 {
     return n([](int i) { return i + 1; })(0);
 }
@@ -58,11 +49,11 @@ constexpr int unchurch(auto n)
 static_assert(unchurch(zero) == 0);
 static_assert(unchurch(succ(zero)) == 1);
 static_assert(unchurch(succ(succ(zero))) == 2);
-static_assert(unchurch(church_v<5>) == 5);
-static_assert(unchurch(plus(church_v<5>)(church_v<3>)) == 8);
-static_assert(unchurch(mult(church_v<5>)(church_v<3>)) == 15);
-static_assert(unchurch(exp(church_v<5>)(church_v<3>)) == 125);
-static_assert(unchurch(pred(church_v<5>)) == 4);
-static_assert(unchurch(minus(church_v<5>)(church_v<3>)) == 2);
+static_assert(unchurch(church<5>) == 5);
+static_assert(unchurch(plus(church<5>)(church<3>)) == 8);
+static_assert(unchurch(mult(church<5>)(church<3>)) == 15);
+static_assert(unchurch(exp(church<5>)(church<3>)) == 125);
+static_assert(unchurch(pred(church<5>)) == 4);
+static_assert(unchurch(minus(church<5>)(church<3>)) == 2);
 
 } // namespace church
